@@ -293,7 +293,7 @@ const FITS=[{k:'contain',l:'عادي',i:'fit'},{k:'cover',l:'تكبير',i:'cove
 let fitIdx=0;try{fitIdx=Math.max(0,Math.min(3,+localStorage.getItem('atv_fit')||0))}catch(e){}
 const v = $('v'), stage = $('stage'), bar = $('bar');
 let retries = 0, retryT = null, sleepT = null, sleepMin = 0, wake = null;
-let hls = null, sk = null, isDash = false, dragging = false, cur = -1, hideT = null, lowIdx = 0, speedT = null, menuOpen = null, loadId = 0;
+let hls = null, sk = null, tsPlayer = null, isDash = false, dragging = false, cur = -1, hideT = null, lowIdx = 0, speedT = null, menuOpen = null, loadId = 0;
 
 const host = $('sections');
 const ld = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } };
@@ -369,9 +369,11 @@ function play(i, keep){
   loaderAt=0; $('loader').classList.add('off'); loaderOn();
   closeMenus(); stopSpeed();
   if (hls) { try { hls.destroy(); } catch (e) {} hls = null; }
-  if (sk) { try { sk.destroy(); } catch (e) {} sk = null; }
   if (tsPlayer) { try { tsPlayer.destroy(); } catch (e) {} tsPlayer = null; }
-  try { v.removeAttribute('src'); v.load(); } catch (e) {}
+  if (ch.type !== 'dash' && !/\.mpd(\?|$)/i.test(ch.url)) {
+    if (sk) { try { sk.unload(); } catch (e) {} }
+    try { v.removeAttribute('src'); v.load(); } catch (e) {}
+  }
   isDash = false;
   $('qMenu').innerHTML = '';
   if (ch.type === 'ts' || /\.ts(\?|$)/i.test(ch.url)) {
@@ -516,7 +518,7 @@ async function playDash(ch, id){
         bufferingGoal: 6,
         rebufferingGoal: 2,
         bufferBehind: 10,
-        jumpLargeGaps: true
+        
       }
     };
     if (ch.clearkey && Object.keys(ch.clearkey).length) {
@@ -766,7 +768,8 @@ try {
 renderSections();
 setPlayIcon(); setVolIcon(); setFitIcon(); setFsIcon();
 const lastI = idxOf(ld('atv_last', ''));
-play(lastI >= 0 ? lastI : 0);
+const defaultI = CHANNELS.findIndex(ch => ch.name === 'bein sport1 En');
+play(lastI >= 0 ? lastI : (defaultI >= 0 ? defaultI : 0));
 </script>
 </body>
 </html>
