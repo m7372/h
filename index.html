@@ -186,6 +186,7 @@ setTimeout(dismissIntro, 3200);
 try { if (window.shaka && shaka.polyfill) shaka.polyfill.installAll(); } catch (e) {}
 const ta2alBase = "https://l.alameeeretv.workers.dev/?url=http://so.ta2al.us:80/live/MH12ARBMH12/MH12ARBMH12/";
 
+const WORKER_PROXY = "https://h.m737217130.workers.dev/?url=";
 const RAW_CHANNELS = [
   // مجموعة قنوات beIN الرياضية (الجديدة بتقنية TS)
   { n: "bein 1", u: "http://live-albashatv.site/ww?url=http://rfedswertas9900.site:2052/live///32400256889746/29789212069919/677066.ts", t: "ts", s: "bein" },
@@ -498,6 +499,15 @@ async function playDash(ch, id){
   try {
     if (!sk) {
       sk = new window.shaka.Player(v);
+      sk.getNetworkingEngine().registerRequestFilter((type, request) => {
+        const uri = request.uris[0];
+        if (!uri) return;
+        if (uri.startsWith("http://") || uri.includes("edgenextcdn.net") || uri.includes("intigral-ott.net")) {
+          if (!uri.includes(WORKER_PROXY)) {
+            request.uris[0] = WORKER_PROXY + encodeURIComponent(uri);
+          }
+        }
+      });
       sk.addEventListener('error', e => {
         const d = e.detail || {};
         console.error('Shaka player error:', d);
